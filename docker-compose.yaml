@@ -1,0 +1,56 @@
+version: '2.1'
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:5.7.26
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=pass
+    healthcheck:
+        test: ["CMD-SHELL", "mysqladmin -h 'localhost' -u root -pWelcome123 ping --silent"]
+        interval: 300s
+        timeout: 30s
+        retries: 3
+    volumes:
+      - mysqldata:/var/lib/mysql
+    networks:
+      - dbnet
+
+  elasticsearch:
+    image: elasticsearch:5.6
+    container_name: elasticsearch
+    depends_on:
+      mysql:
+          condition: service_healthy
+    healthcheck:
+        test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+        interval: 300s
+        timeout: 30s
+        retries: 3
+    environment:
+      - "ES_JAVA_OPTS=-Xmx2g -Xms2g"
+      - bootstrap.memory_local=true
+      - cluster.name=adlp-cluster
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/etc/elasticsearch/config/elasticsearch.yml
+      - ./elasticsearch/config/jvm.options:/etc/elasticsearch/config/jvm.options
+      - ./elasticsearch/config/log4j2.properties:/etc/elasticsearch/config/log4j2.properties
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - esnet
+
+volumes:
+  mysqldata:
+    driver: local
+  esdata:
+    driver: local
+
+networks:
+  esnet:
+    driver: bridge
+  dbnet:
+    driver: bridge
