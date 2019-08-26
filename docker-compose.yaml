@@ -10,7 +10,6 @@ services:
       - MYSQL_ROOT_PASSWORD=pass
       - sql_log_off=ON
     healthcheck:
-#        test: ["CMD-SHELL", "mysqladmin -h 'localhost' -u conductor -pconductor  ping --silent"]
         test: ["CMD-SHELL", "/usr/bin/mysql --user=root --password=pass --execute 'SHOW DATABASES;'"]
         interval: 30s
         timeout: 30s
@@ -21,11 +20,11 @@ services:
       - overlay
 
   elasticsearch:
-    image: elasticsearch:5.6
+    image: elasticsearch:5.5
     container_name: elasticsearch
     healthcheck:
         test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
-        interval: 300s
+        interval: 60s
         timeout: 30s
         retries: 3
     environment:
@@ -44,24 +43,18 @@ services:
       - overlay
 
   conductor:
-    image: kayosportsau/netflixconductor:server-2.13.5
+    image: s50600822/conductor:server-2.13.5
     depends_on:
       mysql:
         condition: service_healthy
-    environment:
-      - "db=mysql"
-      - "conductor.jetty.server.enabled=true"
-      - "conductor.grpc.server.enabled=false"
-      - "jdbc.url=jdbc:mysql://mysql:3306/conductor?useSSL=false"
-      - "jdbc.username=conductor"
-      - "jdbc.password=conductor"
-      - "conductor.mysql.connection.pool.size.max=20"
-      - "conductor.mysql.connection.pool.idle.min=20"
-      - "workflow.elasticsearch.instanceType=MEMORY"
+      elasticsearch:
+        condition: service_healthy
     volumes:
       - ${PWD}/conductor-config.properties:/app/config/config-local.properties
     networks:
       - overlay
+    ports:
+      - "8080:8080"
 
 volumes:
   mysqldata:
