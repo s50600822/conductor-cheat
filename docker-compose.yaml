@@ -2,27 +2,27 @@ version: '2.1'
 services:
   mysql:
     container_name: mysql
-    image: mysql:5.7.26
+    #image: mysql:5.7.26
+    image: s50600822/conductor-mysql:5.7.26
     ports:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=pass
+      - sql_log_off=ON
     healthcheck:
-        test: ["CMD-SHELL", "mysqladmin -h 'localhost' -u root -pWelcome123 ping --silent"]
-        interval: 300s
+#        test: ["CMD-SHELL", "mysqladmin -h 'localhost' -u conductor -pconductor  ping --silent"]
+        test: ["CMD-SHELL", "/usr/bin/mysql --user=root --password=pass --execute 'SHOW DATABASES;'"]
+        interval: 30s
         timeout: 30s
         retries: 3
     volumes:
       - mysqldata:/var/lib/mysql
     networks:
-      - dbnet
+      - overlay
 
   elasticsearch:
     image: elasticsearch:5.6
     container_name: elasticsearch
-    depends_on:
-      mysql:
-          condition: service_healthy
     healthcheck:
         test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
         interval: 300s
@@ -41,16 +41,35 @@ services:
       - ./elasticsearch/config/log4j2.properties:/etc/elasticsearch/config/log4j2.properties
       - esdata:/usr/share/elasticsearch/data
     networks:
-      - esnet
+      - overlay
+
+  conductor:
+    image: kayosportsau/netflixconductor:server-2.13.5
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - "db=mysql"
+      - "conductor.jetty.server.enabled=true"
+      - "conductor.grpc.server.enabled=false"
+      - "jdbc.url=jdbc:mysql://mysql:3306/conductor?useSSL=false"
+      - "jdbc.username=conductor"
+      - "jdbc.password=conductor"
+      - "conductor.mysql.connection.pool.size.max=20"
+      - "conductor.mysql.connection.pool.idle.min=20"
+      - "workflow.elasticsearch.instanceType=MEMORY"
+    volumes:
+      - ${PWD}/conductor-config.properties:/app/config/config-local.properties
+    networks:
+      - overlay
 
 volumes:
   mysqldata:
     driver: local
   esdata:
     driver: local
+  conductordata:
+    driver: local
 
 networks:
-  esnet:
-    driver: bridge
-  dbnet:
-    driver: bridge
+  overlay:
