@@ -4,6 +4,6 @@
 FROM mysql:5.7.26
 ENV MYSQL_DATABASE conductor
 ENV MYSQL_ROOT_PASSWORD pass
-ENV innodb_print_all_deadlocks ON
 
+COPY ./cnf/mysqld.cnf /etc/mysql/mysql.conf.d/mysqld.cnf
 COPY ./sql/ /docker-entrypoint-initdb.d/
