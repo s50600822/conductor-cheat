@@ -1,0 +1,2 @@
+# SHOW RUNNING WF and last updated date
+curl -XGET http://conductor-es.kubernetes-staging.foxsports.com.au/conductor_mysql/_search\?q\=status:RUNNING | jq '.hits.hits[] | "\(._source.workflowId)  updated:\(._source.updateTime)"'
