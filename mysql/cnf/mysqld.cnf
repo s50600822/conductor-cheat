@@ -33,3 +33,4 @@ log-queries-not-using-indexes=1
 slow-query-log=1
 innodb_print_all_deadlocks=1
 #thread_pool_stall_limit=2
+default-time-zone=+10:00
