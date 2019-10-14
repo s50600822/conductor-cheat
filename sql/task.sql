@@ -1,0 +1,1 @@
+select task_id, json_extract(json_data, '$.taskType') type, json_extract(json_data, '$.workflowType'), json_extract(json_data, '$.workflowType') workflow, json_extract(json_data, '$.status') status, json_extract(json_data, '$.taskStatus') taskStatus, from_Unixtime(json_extract(json_data, '$.startTime')/1000) startTime from task limit 1;

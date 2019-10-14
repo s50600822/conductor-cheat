@@ -1,0 +1,1 @@
+select DATE_FORMAT(created_on, '%Y/%m/%d'), count(workflow_id) from workflow group by DATE_FORMAT(created_on, '%Y/%m/%d');
